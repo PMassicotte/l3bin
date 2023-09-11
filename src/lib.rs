@@ -133,6 +133,46 @@ impl Isin {
 
         result
     }
+
+    /// Convert bin to bounds
+    /// # Arguments
+    /// * `bin` - A vector of bin values
+    /// # Example
+    /// ```
+    /// let isin = l3bin::Isin::new(4320);
+    /// let bounds = isin.bin2bounds(&mut vec![245535, 245536, 247290, 249046, 249047, 250809]);
+    /// println!("Bounds: {:?}", bounds);
+    /// ```
+    /// # Note
+    /// The bounds are returned in the order north, south, west, east.
+    pub fn bin2bounds(&self, bin: &mut Vec<usize>) -> Vec<(f64, f64, f64, f64)> {
+        let mut result: Vec<(f64, f64, f64, f64)> = Vec::with_capacity(bin.len());
+
+        for bin_val in bin.iter_mut() {
+            let mut row = self.numrows - 1;
+            if *bin_val < 1 {
+                *bin_val = 1
+            }
+
+            while *bin_val < self.basebin[row] {
+                row -= 1
+            }
+
+            let north = self.latbin[row] + (90.0 / self.numrows as f64);
+            let south = self.latbin[row] - (90.0 / self.numrows as f64);
+
+            let lon = 360.0 * (*bin_val as f64 - self.basebin[row] as f64 + 0.5)
+                / self.numbin[row] as f64
+                - 180.0;
+
+            let west = lon - 180.0 / self.numbin[row] as f64;
+            let east = lon + 180.0 / self.numbin[row] as f64;
+
+            result.push((north, south, west, east));
+        }
+
+        result
+    }
 }
 
 fn is_vector_within_bounds(numbers: &Vec<f64>, lower_bound: f64, upper_bound: f64) -> bool {
