@@ -146,6 +146,8 @@ impl Isin {
     /// # Note
     /// The bounds are returned in the order north, south, west, east.
     pub fn bin2bounds(&self, bin: &mut Vec<usize>) -> Vec<(f64, f64, f64, f64)> {
+        assert_eq!(bin.iter().all(|&b| b >= 1 && b <= self.totbin), true);
+
         let mut result: Vec<(f64, f64, f64, f64)> = Vec::with_capacity(bin.len());
 
         for bin_val in bin.iter_mut() {
