@@ -109,22 +109,20 @@ impl Isin {
     /// let lonlat = isin.bin2lonlat(&mut vec![245535, 245536, 247290, 249046, 249047, 250809]);
     /// println!("Lonlat: {:?}", lonlat);
     /// ```
-    pub fn bin2lonlat(&self, bin: &mut Vec<usize>) -> Vec<(f64, f64)> {
+    pub fn bin2lonlat(&self, bin: &[usize]) -> Vec<(f64, f64)> {
         assert_eq!(bin.iter().all(|&b| b >= 1 && b <= self.totbin), true);
 
         let mut result: Vec<(f64, f64)> = Vec::with_capacity(bin.len());
 
-        for bin_val in bin.iter_mut() {
+        for bin_val in bin.iter() {
             let mut row = self.numrows - 1;
+            let bin_val = if *bin_val < 1 { 1 } else { *bin_val };
 
-            if *bin_val < 1 {
-                *bin_val = 1;
-            }
-            while *bin_val < self.basebin[row] {
+            while bin_val < self.basebin[row] {
                 row -= 1;
             }
             let lat = self.latbin[row];
-            let lon = 360.0 * (*bin_val as f64 - self.basebin[row] as f64 + 0.5)
+            let lon = 360.0 * (bin_val as f64 - self.basebin[row] as f64 + 0.5)
                 / self.numbin[row] as f64
                 - 180.0;
 
@@ -145,25 +143,23 @@ impl Isin {
     /// ```
     /// # Note
     /// The bounds are returned in the order north, south, west, east.
-    pub fn bin2bounds(&self, bin: &mut Vec<usize>) -> Vec<(f64, f64, f64, f64)> {
+    pub fn bin2bounds(&self, bin: &[usize]) -> Vec<(f64, f64, f64, f64)> {
         assert_eq!(bin.iter().all(|&b| b >= 1 && b <= self.totbin), true);
 
         let mut result: Vec<(f64, f64, f64, f64)> = Vec::with_capacity(bin.len());
 
-        for bin_val in bin.iter_mut() {
+        for bin_val in bin.iter() {
             let mut row = self.numrows - 1;
-            if *bin_val < 1 {
-                *bin_val = 1
-            }
+            let bin_val = if *bin_val < 1 { 1 } else { *bin_val };
 
-            while *bin_val < self.basebin[row] {
+            while bin_val < self.basebin[row] {
                 row -= 1
             }
 
             let north = self.latbin[row] + (90.0 / self.numrows as f64);
             let south = self.latbin[row] - (90.0 / self.numrows as f64);
 
-            let lon = 360.0 * (*bin_val as f64 - self.basebin[row] as f64 + 0.5)
+            let lon = 360.0 * (bin_val as f64 - self.basebin[row] as f64 + 0.5)
                 / self.numbin[row] as f64
                 - 180.0;
 
