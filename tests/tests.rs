@@ -1,8 +1,8 @@
 // Implement tests for isin
 #[cfg(test)]
-use l3bin::Isin;
+
 mod tests {
-    use super::*;
+    use l3bin::Isin;
 
     //check modis resturn 4320 rows
     // #[test]
@@ -25,7 +25,7 @@ mod tests {
         let isin = Isin::new(4320);
         let lon = vec![181.0, 0.0];
         let lat = vec![0.0, 0.0];
-        isin.lonlat2bin(lon, lat);
+        isin.lonlat2bin(&lon, &lat);
     }
 
     // Check lonlat fails if lat is out of bounds
@@ -35,7 +35,7 @@ mod tests {
         let isin = Isin::new(4320);
         let lon = vec![0.0, 0.0];
         let lat = vec![91.0, 0.0];
-        isin.lonlat2bin(lon, lat);
+        isin.lonlat2bin(&lon, &lat);
     }
 
     // Check lat2row fails if lat is out of bounds

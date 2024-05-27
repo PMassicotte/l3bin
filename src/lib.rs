@@ -63,7 +63,7 @@ impl Isin {
     /// println!("Row: {:?}", row);
     /// ```
     pub fn lat2row(&self, lat: f64) -> usize {
-        assert_eq!(is_vector_within_bounds(&vec![lat], MIN_LAT, MAX_LAT), true);
+        assert!(is_vector_within_bounds(&[lat], MIN_LAT, MAX_LAT));
 
         let row = (90.0 + lat) * (self.numrows as f64) / 180.0 + 1.0;
         row as usize
@@ -76,12 +76,12 @@ impl Isin {
     /// # Example
     /// ```
     /// let is = l3bin::Isin::new(4320);
-    /// let bin = is.lonlat2bin(vec![45.0], vec![45.0]);
+    /// let bin = is.lonlat2bin(&[45.0], &[45.0]);
     /// println!("Bin: {:?}", bin);
     /// ```
-    pub fn lonlat2bin(&self, lon: Vec<f64>, lat: Vec<f64>) -> Vec<usize> {
-        assert_eq!(is_vector_within_bounds(&lon, MIN_LON, MAX_LON), true);
-        assert_eq!(is_vector_within_bounds(&lat, MIN_LAT, MAX_LAT), true);
+    pub fn lonlat2bin(&self, lon: &[f64], lat: &[f64]) -> Vec<usize> {
+        assert!(is_vector_within_bounds(lon, MIN_LON, MAX_LON));
+        assert!(is_vector_within_bounds(lat, MIN_LAT, MAX_LAT));
 
         let mut bin: Vec<usize> = Vec::with_capacity(lat.len());
 
@@ -93,7 +93,7 @@ impl Isin {
                 col = self.numbin[row] - 1;
             }
 
-            bin.push(self.basebin[row] + col as usize);
+            bin.push(self.basebin[row] + col);
         }
 
         bin
@@ -110,7 +110,7 @@ impl Isin {
     /// println!("Lonlat: {:?}", lonlat);
     /// ```
     pub fn bin2lonlat(&self, bin: &[usize]) -> Vec<(f64, f64)> {
-        assert_eq!(bin.iter().all(|&b| b >= 1 && b <= self.totbin), true);
+        assert!(bin.iter().all(|&b| b >= 1 && b <= self.totbin));
 
         let mut result: Vec<(f64, f64)> = Vec::with_capacity(bin.len());
 
@@ -144,7 +144,7 @@ impl Isin {
     /// # Note
     /// The bounds are returned in the order north, south, west, east.
     pub fn bin2bounds(&self, bin: &[usize]) -> Vec<(f64, f64, f64, f64)> {
-        assert_eq!(bin.iter().all(|&b| b >= 1 && b <= self.totbin), true);
+        assert!(bin.iter().all(|&b| b >= 1 && b <= self.totbin));
 
         let mut result: Vec<(f64, f64, f64, f64)> = Vec::with_capacity(bin.len());
 
@@ -173,7 +173,7 @@ impl Isin {
     }
 }
 
-fn is_vector_within_bounds(numbers: &Vec<f64>, lower_bound: f64, upper_bound: f64) -> bool {
+fn is_vector_within_bounds(numbers: &[f64], lower_bound: f64, upper_bound: f64) -> bool {
     numbers
         .iter()
         .all(|&num| num >= lower_bound && num <= upper_bound)
