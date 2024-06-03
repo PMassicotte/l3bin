@@ -1,6 +1,6 @@
 [package]
 name = "l3bin"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 authors = ["Philippe Massicotte <pmassicotte@hotmail.com>"]
 description = "Integerized Sinusoidal Binning Scheme for Level 3 Data"
