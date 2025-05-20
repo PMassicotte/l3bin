@@ -19,6 +19,7 @@ pub struct Isin {
 
 impl Isin {
     /// Create a new ISIN grid
+    ///
     /// # Arguments
     /// * `nusmrows` - The number of rows in the ISIN grid. MODIS is 4320, SeaWiFS is 2160.
     /// # Example
@@ -29,11 +30,11 @@ impl Isin {
     /// ```
     pub fn new(sat: Satellite) -> Isin {
         let numrows = sat.resolution();
-        let mut sdf: Vec<usize> = Vec::with_capacity(numrows);
+        let mut basebin: Vec<usize> = Vec::with_capacity(numrows);
         let mut numbin: Vec<usize> = Vec::with_capacity(numrows);
         let mut latbin: Vec<f64> = Vec::with_capacity(numrows);
 
-        sdf.push(1);
+        basebin.push(1);
 
         let pi_over_180 = std::f64::consts::PI / 180.0;
 
@@ -46,14 +47,14 @@ impl Isin {
             numbin.push(num);
 
             if row > 0 {
-                sdf.push(sdf[row - 1] + numbin[row - 1]);
+                basebin.push(basebin[row - 1] + numbin[row - 1]);
             }
         }
 
-        let totbin = sdf[numrows - 1] + numbin[numrows - 1];
+        let totbin = basebin[numrows - 1] + numbin[numrows - 1];
 
         Isin {
-            basebin: sdf,
+            basebin,
             numbin,
             latbin,
             totbin,
