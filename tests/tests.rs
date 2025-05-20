@@ -1,28 +1,14 @@
 // Implement tests for isin
 #[cfg(test)]
-
 mod tests {
-    use l3bin::Isin;
-
-    //check modis resturn 4320 rows
-    // #[test]
-    // fn test_modis_rows() {
-    //     let isin = Isin::new(4320);
-    //     assert_eq!(isin.numrows, 4320);
-    // }
-
-    //check viirs resturn 4060 rows
-    // #[test]
-    // fn test_seawifs_rows() {
-    //     let isin = Isin::new(2160);
-    //     assert_eq!(isin.numrows, 2160);
-    // }
+    use l3bin::isin::Isin;
+    use l3bin::satellites::Satellite;
 
     // Check lonlat fails if lon is out of bounds
     #[test]
     #[should_panic]
     fn test_lonlat2bin_lon_out_of_bounds() {
-        let isin = Isin::new(4320);
+        let isin = Isin::new(Satellite::Modis);
         let lon = vec![181.0, 0.0];
         let lat = vec![0.0, 0.0];
         isin.lonlat2bin(&lon, &lat);
@@ -32,7 +18,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_lonlat2bin_lat_out_of_bounds() {
-        let isin = Isin::new(4320);
+        let isin = Isin::new(Satellite::Modis);
         let lon = vec![0.0, 0.0];
         let lat = vec![91.0, 0.0];
         isin.lonlat2bin(&lon, &lat);
@@ -42,7 +28,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_lat2row_lat_out_of_bounds() {
-        let isin = Isin::new(4320);
+        let isin = Isin::new(Satellite::Modis);
         isin.lat2row(91.0);
     }
 
@@ -50,7 +36,7 @@ mod tests {
     // #[test]
     // #[should_panic]
     // fn test_bin2lonlat_bin_out_of_bounds() {
-    //     let isin = Isin::new(4320);
+    //     let isin = Isin::new(Satellite::Modis);
     //     let mut bin = vec![isin.totbin + 1];
     //     isin.bin2lonlat(&mut bin);
     // }
