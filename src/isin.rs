@@ -197,73 +197,133 @@ impl Isin {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::satellites::Satellite;
+    mod lat2row {
+        use super::super::*;
+        use crate::satellites::Satellite;
 
-    #[test]
-    fn test_lat2row() {
-        let isin = Isin::new(Satellite::Modis);
+        #[test]
+        fn test_lat2row() {
+            let isin = Isin::new(Satellite::Modis);
 
-        assert_eq!(isin.lat2row(0.0), isin.numrows / 2);
-        assert_eq!(isin.lat2row(-90.0), 0);
-        assert_eq!(isin.lat2row(90.0), isin.numrows);
-        assert_eq!(isin.lat2row(45.0), 3240);
-    }
-
-    #[test]
-    fn test_lonlat2bin_and_bin2lonlat() {
-        let isin = Isin::new(Satellite::Modis);
-        let lon = vec![0.0, 45.0, -45.0];
-        let lat = vec![0.0, 45.0, -45.0];
-        let bins = isin.lonlat2bin(&lon, &lat);
-        let lonlat = isin.bin2lonlat(&bins);
-
-        assert_eq!(lonlat.len(), 3);
-
-        for ((l, a), (ol, oa)) in lon.iter().zip(lat.iter()).zip(lonlat.iter()) {
-            assert!((l - ol).abs() < 2.0);
-            assert!((a - oa).abs() < 2.0);
+            assert_eq!(isin.lat2row(0.0), isin.numrows / 2);
+            assert_eq!(isin.lat2row(-90.0), 0);
+            assert_eq!(isin.lat2row(90.0), isin.numrows);
+            assert_eq!(isin.lat2row(45.0), 3240);
         }
     }
 
-    #[test]
-    fn test_bin2bounds() {
-        let isin = Isin::new(Satellite::Modis);
-        let bins = vec![isin.lonlat2bin(&[0.0], &[0.0])[0]];
-        let bounds = isin.bin2bounds(&bins);
-        assert_eq!(bounds.len(), 1);
+    mod lonlat2bin_and_bin2lonlat {
+        use super::super::*;
+        use crate::satellites::Satellite;
 
-        let (north, south, west, east) = bounds[0];
+        #[test]
+        fn test_lonlat2bin_and_bin2lonlat() {
+            let isin = Isin::new(Satellite::Modis);
+            let lon = vec![0.0, 45.0, -45.0];
+            let lat = vec![0.0, 45.0, -45.0];
+            let bins = isin.lonlat2bin(&lon, &lat);
+            let lonlat = isin.bin2lonlat(&bins);
 
-        assert!(north > south);
-        assert!(east > west);
+            assert_eq!(lonlat.len(), 3);
+
+            for ((l, a), (ol, oa)) in lon.iter().zip(lat.iter()).zip(lonlat.iter()) {
+                assert!((l - ol).abs() < 2.0);
+                assert!((a - oa).abs() < 2.0);
+            }
+        }
     }
 
-    #[test]
-    // https://github.com/sosoc/croc/blob/e91fcd64017e955922615244577fc8c803cb9a76/tests/testthat/test-bins.R
-    fn test_bin2lonlat() {
-        let isin = Isin::new(Satellite::Modis);
+    mod bin2bounds {
+        use super::super::*;
+        use crate::satellites::Satellite;
 
-        let bins = vec![
-            6308931, 8842288, 13611957, 21580540, 4792301, 21347245, 22447068, 15701664, 14948805,
-            1468146,
-        ];
+        #[test]
+        fn test_bin2bounds() {
+            let isin = Isin::new(Satellite::Modis);
+            let bins = vec![isin.lonlat2bin(&[0.0], &[0.0])[0]];
+            let bounds = isin.bin2bounds(&bins);
+            assert_eq!(bounds.len(), 1);
 
-        let expected: Vec<(f64, f64)> = vec![
-            (94.38794233289644, -27.979166666666664),
-            (-48.701065485454336, -14.8125),
-            (-152.3903123903124, 8.395833333333329),
-            (-14.143114852675893, 54.72916666666666),
-            (142.32256203115986, -36.645833333333336),
-            (95.85982382229031, 52.8125),
-            (-179.68085106382978, 62.8125),
-            (-98.6479217603912, 18.77083333333333),
-            (-123.04097771387491, 14.979166666666671),
-            (128.35497835497836, -61.22916666666667),
-        ];
+            let (north, south, west, east) = bounds[0];
 
-        let res = isin.bin2lonlat(&bins);
+            assert!(north > south);
+            assert!(east > west);
+        }
+    }
 
-        assert_eq!(res, expected);
+    mod bin2lonlat {
+        use super::super::*;
+        use crate::satellites::Satellite;
+
+        macro_rules! assert_approx_eq_tuple {
+            ($a:expr, $b:expr, $epsilon:expr) => {{
+                let ((a_lat, a_lon), (b_lat, b_lon)) = ($a, $b);
+                assert!(
+                    (a_lat - b_lat).abs() < $epsilon,
+                    "Latitude not within epsilon: {} != {}",
+                    a_lat,
+                    b_lat
+                );
+                assert!(
+                    (a_lon - b_lon).abs() < $epsilon,
+                    "Longitude not within epsilon: {} != {}",
+                    a_lon,
+                    b_lon
+                );
+            }};
+        }
+
+        // https://github.com/sosoc/croc/blob/e91fcd64017e955922615244577fc8c803cb9a76/tests/testthat/test-bins.R
+        #[test]
+        fn test_bin2lonlat() {
+            let isin = Isin::new(Satellite::Modis);
+
+            let bins = vec![
+                6308931, 8842288, 13611957, 21580540, 4792301, 21347245, 22447068, 15701664,
+                14948805, 1468146,
+            ];
+
+            let expected: Vec<(f64, f64)> = vec![
+                (94.38794233289644, -27.979166666666664),
+                (-48.701065485454336, -14.8125),
+                (-152.3903123903124, 8.395833333333329),
+                (-14.143114852675893, 54.72916666666666),
+                (142.32256203115986, -36.645833333333336),
+                (95.85982382229031, 52.8125),
+                (-179.68085106382978, 62.8125),
+                (-98.6479217603912, 18.77083333333333),
+                (-123.04097771387491, 14.979166666666671),
+                (128.35497835497836, -61.22916666666667),
+            ];
+
+            let result = isin.bin2lonlat(&bins);
+
+            for (res, exp) in result.iter().zip(expected.iter()) {
+                assert_approx_eq_tuple!(res, exp, 1e-6);
+            }
+        }
+    }
+
+    mod panic_cases {
+        use super::super::*;
+        use crate::satellites::Satellite;
+
+        #[test]
+        #[should_panic]
+        fn test_lonlat2bin_panic_when_lon_out_of_bounds() {
+            let isin = Isin::new(Satellite::Modis);
+            let lon = vec![181.0, 0.0];
+            let lat = vec![0.0, 0.0];
+            isin.lonlat2bin(&lon, &lat);
+        }
+
+        #[test]
+        #[should_panic]
+        fn test_lonlat2bin_panic_when_lat_out_of_bounds() {
+            let isin = Isin::new(Satellite::Modis);
+            let lon = vec![0.0, 0.0];
+            let lat = vec![91.0, 0.0];
+            isin.lonlat2bin(&lon, &lat);
+        }
     }
 }
