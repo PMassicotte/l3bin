@@ -1,7 +1,5 @@
 use std::fmt;
 
-// TODO: Rename to Grid?
-// Like Grid::Modis...
 #[derive(Debug, PartialEq)]
 pub enum Satellite {
     Custom(usize),
@@ -22,7 +20,7 @@ impl fmt::Display for SatelliteError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             SatelliteError::InvalidNumLatitudeRows => {
-                write!(f, "The number of latitudes/rows must be divisible by 360")
+                write!(f, "The number of latitude rows must be divisible by 360")
             }
         }
     }
