@@ -72,7 +72,7 @@ impl Isin {
             }
         }
 
-        let totbin = basebin[numrows - 1] + numbin[numrows - 1];
+        let totbin = basebin[numrows - 1] + numbin[numrows - 1] - 1;
 
         Isin {
             basebin,
