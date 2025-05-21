@@ -18,25 +18,6 @@ pub struct Isin {
 }
 
 impl Isin {
-    /// Creates a new ISIN grid based on the resolution of the given satellite.
-    ///
-    /// The `sat` parameter determines the grid size by specifying the satellite
-    /// whose resolution is used to calculate the number of rows in the grid.
-    ///
-    /// Predefined satellites have fixed resolutions, for example:
-    /// - MODIS: 4320 rows
-    /// - SeaWiFS: 2160 rows
-    ///
-    /// Alternatively, you can specify a custom resolution by using
-    /// `Satellite::Custom(resolution)`, where `resolution` is the desired number of rows.
-    ///
-    /// This allows generating grids of different resolutions depending on
-    /// the satellite source or custom requirements.
-    ///
-    /// # Arguments
-    ///
-    /// * `sat` - The satellite used to derive the grid resolution, either a predefined satellite or a custom resolution.
-    ///
     /// # Example
     ///
     /// ```
@@ -50,7 +31,7 @@ impl Isin {
     /// let isin_custom = Isin::new(Satellite::Custom(1000));
     /// ```
     pub fn new(sat: Satellite) -> Isin {
-        let numrows = sat.resolution();
+        let numrows = sat.num_latitude_rows();
         let mut basebin: Vec<usize> = Vec::with_capacity(numrows);
         let mut numbin: Vec<usize> = Vec::with_capacity(numrows);
         let mut latbin: Vec<f64> = Vec::with_capacity(numrows);
@@ -72,7 +53,7 @@ impl Isin {
             }
         }
 
-        let totbin = basebin[numrows - 1] + numbin[numrows - 1];
+        let totbin = basebin[numrows - 1] + numbin[numrows - 1] - 1;
 
         Isin {
             basebin,

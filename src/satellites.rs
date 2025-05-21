@@ -13,13 +13,15 @@ pub enum Satellite {
 
 #[derive(Debug, PartialEq)]
 pub enum SatelliteError {
-    InvalidResolution,
+    InvalidNumLatitudeRows,
 }
 
 impl fmt::Display for SatelliteError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            SatelliteError::InvalidResolution => write!(f, "Resolution must be divisible by 360"),
+            SatelliteError::InvalidNumLatitudeRows => {
+                write!(f, "The number of latitude rows must be divisible by 360")
+            }
         }
     }
 }
@@ -27,17 +29,17 @@ impl fmt::Display for SatelliteError {
 impl std::error::Error for SatelliteError {}
 
 impl Satellite {
-    pub fn with_resolution(resolution: usize) -> Result<Self, SatelliteError> {
-        if resolution % 360 == 0 {
-            Ok(Satellite::Custom(resolution))
+    pub fn with_num_latitude_rows(num_rows: usize) -> Result<Self, SatelliteError> {
+        if num_rows % 360 == 0 {
+            Ok(Satellite::Custom(num_rows))
         } else {
-            Err(SatelliteError::InvalidResolution)
+            Err(SatelliteError::InvalidNumLatitudeRows)
         }
     }
 
-    pub fn resolution(&self) -> usize {
+    pub fn num_latitude_rows(&self) -> usize {
         match self {
-            Satellite::Custom(resolution) => *resolution,
+            Satellite::Custom(num_rows) => *num_rows,
             Satellite::Czcs => 1080,
             Satellite::Meris => 2160,
             Satellite::Modis => 4320,
@@ -53,30 +55,33 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_with_resolution_valid() {
-        assert_eq!(Satellite::with_resolution(360), Ok(Satellite::Custom(360)));
+    fn test_with_num_rows_valid() {
+        assert_eq!(
+            Satellite::with_num_latitude_rows(360),
+            Ok(Satellite::Custom(360))
+        );
     }
 
     #[test]
-    fn test_with_resolution_invalid() {
+    fn test_with_num_rows_invalid() {
         assert_eq!(
-            Satellite::with_resolution(400),
-            Err(SatelliteError::InvalidResolution)
+            Satellite::with_num_latitude_rows(400),
+            Err(SatelliteError::InvalidNumLatitudeRows)
         )
     }
 
     #[test]
-    fn test_resolution_modis() {
-        assert_eq!(Satellite::Modis.resolution(), 4320);
+    fn test_modis() {
+        assert_eq!(Satellite::Modis.num_latitude_rows(), 4320);
     }
 
     #[test]
-    fn test_resolution_seawifs() {
-        assert_eq!(Satellite::Seawifs.resolution(), 2160);
+    fn test_seawifs() {
+        assert_eq!(Satellite::Seawifs.num_latitude_rows(), 2160);
     }
 
     #[test]
-    fn test_resolution_custom() {
-        assert_eq!(Satellite::Custom(720).resolution(), 720);
+    fn test_num_rows_custom() {
+        assert_eq!(Satellite::Custom(720).num_latitude_rows(), 720);
     }
 }
