@@ -86,12 +86,12 @@ impl Isin {
     /// let row = isin.lat2row(45.0).unwrap();
     /// println!("Row: {:?}", row);
     /// ```
-    pub fn lat2row(&self, lat: f64) -> Result<usize, String> {
+    pub fn lat2row(&self, lat: f64) -> Result<usize, IsinError> {
         if !is_vector_within_bounds(&[lat], MIN_LAT, MAX_LAT) {
-            return Err(format!(
-                "The provided latitude {} should be between {} and {}",
-                lat, MIN_LAT, MAX_LAT
-            ));
+            return Err(IsinError::InvalidLatitude {
+                min: MIN_LAT,
+                max: MAX_LAT,
+            });
         }
 
         let row = (90.0 + lat) * (self.numrows as f64) / 180.0;
@@ -110,18 +110,19 @@ impl Isin {
     /// let bin = isin.lonlat2bin(&[45.0], &[45.0]).unwrap();
     /// println!("Bin: {:?}", bin);
     /// ```
-    pub fn lonlat2bin(&self, lon: &[f64], lat: &[f64]) -> Result<Vec<usize>, String> {
+    pub fn lonlat2bin(&self, lon: &[f64], lat: &[f64]) -> Result<Vec<usize>, IsinError> {
         if !is_vector_within_bounds(lon, MIN_LON, MAX_LON) {
-            return Err(format!(
-                "The provided longitudes should be between {} and {}",
-                MIN_LON, MAX_LON
-            ));
+            return Err(IsinError::InvalidLongitude {
+                min: MIN_LON,
+                max: MAX_LON,
+            });
         }
+
         if !is_vector_within_bounds(lat, MIN_LAT, MAX_LAT) {
-            return Err(format!(
-                "The provided latitudes should be between {} and {}",
-                MIN_LAT, MAX_LAT
-            ));
+            return Err(IsinError::InvalidLatitude {
+                min: MIN_LAT,
+                max: MAX_LAT,
+            });
         }
 
         let mut bin: Vec<usize> = Vec::with_capacity(lat.len());
