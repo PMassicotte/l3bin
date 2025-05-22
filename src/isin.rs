@@ -1,8 +1,9 @@
 // See appendix A: https://ntrs.nasa.gov/api/citations/19960007721/downloads/19960007721.pdf
 // https://clouds.eos.ubc.ca/~phil/courses/eosc582/html/find_bins.html
 
+use crate::bounds_checker::is_vector_within_bounds;
 use crate::errors::IsinError;
-use crate::{bounds_checker::is_vector_within_bounds, satellites::Satellite};
+use crate::satellites::Satellite;
 
 const MIN_LON: f64 = -180.0;
 const MAX_LON: f64 = 180.0;
