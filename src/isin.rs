@@ -18,12 +18,9 @@ pub struct Isin {
 }
 
 impl Isin {
-    fn validate_bins(&self, bins: &[usize]) -> Result<(), String> {
+    fn validate_bins(&self, bins: &[usize]) -> Result<(), IsinError> {
         if !bins.iter().all(|&b| b >= 1 && b <= self.totbin) {
-            Err(format!(
-                "Bin values must be in the range [1, {}]",
-                self.totbin
-            ))
+            Err(IsinError::InvalidBinRange { max_bin: self.totbin })
         } else {
             Ok(())
         }
