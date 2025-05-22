@@ -337,25 +337,28 @@ mod tests {
         use crate::satellites::Satellite;
 
         #[test]
-        fn test_lonlat2bin_panic_when_lon_out_of_bounds() {
+        fn test_lonlat2bin_error_when_lon_out_of_bounds() {
             let isin = Isin::new(Satellite::Modis);
             let lon = vec![181.0, 0.0];
             let lat = vec![0.0, 0.0];
-            assert!(isin.lonlat2bin(&lon, &lat).is_err());
+            let result = isin.lonlat2bin(&lon, &lat);
+            assert!(matches!(result, Err(IsinError::InvalidLongitude { .. })));
         }
 
         #[test]
-        fn test_lonlat2bin_panic_when_lat_out_of_bounds() {
+        fn test_lonlat2bin_error_when_lat_out_of_bounds() {
             let isin = Isin::new(Satellite::Modis);
             let lon = vec![0.0, 0.0];
             let lat = vec![91.0, 0.0];
-            assert!(isin.lonlat2bin(&lon, &lat).is_err());
+            let result = isin.lonlat2bin(&lon, &lat);
+            assert!(matches!(result, Err(IsinError::InvalidLatitude { .. })));
         }
 
         #[test]
         fn test_lat_is_out_of_range() {
             let isin = Isin::new(Satellite::Modis);
-            assert!(isin.lat2row(101.0).is_err());
+            let result = isin.lat2row(101.1);
+            assert!(matches!(result, Err(IsinError::InvalidLatitude { .. })));
         }
     }
 }
