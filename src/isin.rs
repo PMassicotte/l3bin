@@ -1,6 +1,7 @@
 // See appendix A: https://ntrs.nasa.gov/api/citations/19960007721/downloads/19960007721.pdf
 // https://clouds.eos.ubc.ca/~phil/courses/eosc582/html/find_bins.html
 
+use crate::errors::IsinError;
 use crate::{bounds_checker::is_vector_within_bounds, satellites::Satellite};
 
 const MIN_LON: f64 = -180.0;
@@ -20,7 +21,9 @@ pub struct Isin {
 impl Isin {
     fn validate_bins(&self, bins: &[usize]) -> Result<(), IsinError> {
         if !bins.iter().all(|&b| b >= 1 && b <= self.totbin) {
-            Err(IsinError::InvalidBinRange { max_bin: self.totbin })
+            Err(IsinError::InvalidBinRange {
+                max_bin: self.totbin,
+            })
         } else {
             Ok(())
         }
@@ -149,7 +152,7 @@ impl Isin {
     /// let lonlat = isin.bin2lonlat(&mut vec![245535, 245536, 247290, 249046, 249047, 250809]);
     /// println!("Lonlat: {:?}", lonlat);
     /// ```
-    pub fn bin2lonlat(&self, bin: &[usize]) -> Result<Vec<(f64, f64)>, String> {
+    pub fn bin2lonlat(&self, bin: &[usize]) -> Result<Vec<(f64, f64)>, IsinError> {
         self.validate_bins(bin)?;
 
         let mut result: Vec<(f64, f64)> = Vec::with_capacity(bin.len());
@@ -187,7 +190,7 @@ impl Isin {
     /// ```
     /// # Note
     /// The bounds are returned in the order north, south, west, east.
-    pub fn bin2bounds(&self, bin: &[usize]) -> Result<Vec<(f64, f64, f64, f64)>, String> {
+    pub fn bin2bounds(&self, bin: &[usize]) -> Result<Vec<(f64, f64, f64, f64)>, IsinError> {
         self.validate_bins(bin)?;
 
         let mut result: Vec<(f64, f64, f64, f64)> = Vec::with_capacity(bin.len());
