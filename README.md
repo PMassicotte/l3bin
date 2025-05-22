@@ -13,28 +13,16 @@ This simple example shows how to convert a latitude to a row and then convert a 
 use l3bin::isin::Isin;
 use l3bin::satellites;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let isin = Isin::new(satellites::Satellite::Modis);
 
-    let row = match isin.lat2row(45.0) {
-        Ok(r) => r,
-        Err(e) => {
-            eprintln!("Error converting latitude to row: {}", e);
-            return;
-        }
-    };
-
+    let row = isin.lat2row(45.0)?;
     println!("Row: {}", row);
 
-    let coords = match isin.bin2lonlat(&[245535, 245536, 247290, 249046, 249047, 250809]) {
-        Ok(coords) => coords,
-        Err(e) => {
-            eprintln!("{}", e);
-            return;
-        }
-    };
-
+    let coords = isin.bin2lonlat(&[245535, 245536, 247290, 249046, 249047, 250809])?;
     println!("{:#?}", coords);
+
+    Ok(())
 }
 ```
 
