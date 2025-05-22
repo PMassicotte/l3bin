@@ -1,6 +1,7 @@
 // See appendix A: https://ntrs.nasa.gov/api/citations/19960007721/downloads/19960007721.pdf
 // https://clouds.eos.ubc.ca/~phil/courses/eosc582/html/find_bins.html
 
+use crate::errors::IsinError;
 use crate::{bounds_checker::is_vector_within_bounds, satellites::Satellite};
 
 const MIN_LON: f64 = -180.0;
@@ -18,6 +19,16 @@ pub struct Isin {
 }
 
 impl Isin {
+    fn validate_bins(&self, bins: &[usize]) -> Result<(), IsinError> {
+        if !bins.iter().all(|&b| b >= 1 && b <= self.totbin) {
+            Err(IsinError::InvalidBinRange {
+                max_bin: self.totbin,
+            })
+        } else {
+            Ok(())
+        }
+    }
+
     /// # Example
     ///
     /// ```
@@ -72,14 +83,19 @@ impl Isin {
     /// use l3bin::satellites::Satellite;
     /// use l3bin::isin::Isin;
     /// let isin = Isin::new(Satellite::Modis);
-    /// let row = isin.lat2row(45.0);
+    /// let row = isin.lat2row(45.0).unwrap();
     /// println!("Row: {:?}", row);
     /// ```
-    pub fn lat2row(&self, lat: f64) -> usize {
-        assert!(is_vector_within_bounds(&[lat], MIN_LAT, MAX_LAT));
+    pub fn lat2row(&self, lat: f64) -> Result<usize, IsinError> {
+        if !is_vector_within_bounds(&[lat], MIN_LAT, MAX_LAT) {
+            return Err(IsinError::InvalidLatitude {
+                min: MIN_LAT,
+                max: MAX_LAT,
+            });
+        }
 
         let row = (90.0 + lat) * (self.numrows as f64) / 180.0;
-        row as usize
+        Ok(row as usize)
     }
 
     /// Convert lonlat to bin
@@ -90,18 +106,29 @@ impl Isin {
     /// ```
     /// use l3bin::satellites::Satellite;
     /// use l3bin::isin::Isin;
-    /// let is = Isin::new(Satellite::Modis);
-    /// let bin = is.lonlat2bin(&[45.0], &[45.0]);
+    /// let isin = Isin::new(Satellite::Modis);
+    /// let bin = isin.lonlat2bin(&[45.0], &[45.0]).unwrap();
     /// println!("Bin: {:?}", bin);
     /// ```
-    pub fn lonlat2bin(&self, lon: &[f64], lat: &[f64]) -> Vec<usize> {
-        assert!(is_vector_within_bounds(lon, MIN_LON, MAX_LON));
-        assert!(is_vector_within_bounds(lat, MIN_LAT, MAX_LAT));
+    pub fn lonlat2bin(&self, lon: &[f64], lat: &[f64]) -> Result<Vec<usize>, IsinError> {
+        if !is_vector_within_bounds(lon, MIN_LON, MAX_LON) {
+            return Err(IsinError::InvalidLongitude {
+                min: MIN_LON,
+                max: MAX_LON,
+            });
+        }
+
+        if !is_vector_within_bounds(lat, MIN_LAT, MAX_LAT) {
+            return Err(IsinError::InvalidLatitude {
+                min: MIN_LAT,
+                max: MAX_LAT,
+            });
+        }
 
         let mut bin: Vec<usize> = Vec::with_capacity(lat.len());
 
         for i in 0..lat.len() {
-            let row = self.lat2row(lat[i]);
+            let row = self.lat2row(lat[i])?;
             let mut col = ((lon[i] + 180.0) * (self.numbin[row] as f64 / 360.0)) as usize;
 
             if col >= self.numbin[row] {
@@ -111,7 +138,7 @@ impl Isin {
             bin.push(self.basebin[row] + col);
         }
 
-        bin
+        Ok(bin)
     }
 
     /// Convert bin to lonlat
@@ -126,8 +153,8 @@ impl Isin {
     /// let lonlat = isin.bin2lonlat(&mut vec![245535, 245536, 247290, 249046, 249047, 250809]);
     /// println!("Lonlat: {:?}", lonlat);
     /// ```
-    pub fn bin2lonlat(&self, bin: &[usize]) -> Vec<(f64, f64)> {
-        assert!(bin.iter().all(|&b| b >= 1 && b <= self.totbin));
+    pub fn bin2lonlat(&self, bin: &[usize]) -> Result<Vec<(f64, f64)>, IsinError> {
+        self.validate_bins(bin)?;
 
         let mut result: Vec<(f64, f64)> = Vec::with_capacity(bin.len());
 
@@ -148,7 +175,7 @@ impl Isin {
             result.push((lon, lat));
         }
 
-        result
+        Ok(result)
     }
 
     /// Convert bin to bounds
@@ -164,13 +191,13 @@ impl Isin {
     /// ```
     /// # Note
     /// The bounds are returned in the order north, south, west, east.
-    pub fn bin2bounds(&self, bin: &[usize]) -> Vec<(f64, f64, f64, f64)> {
-        assert!(bin.iter().all(|&b| b >= 1 && b <= self.totbin));
+    pub fn bin2bounds(&self, bin: &[usize]) -> Result<Vec<(f64, f64, f64, f64)>, IsinError> {
+        self.validate_bins(bin)?;
 
         let mut result: Vec<(f64, f64, f64, f64)> = Vec::with_capacity(bin.len());
 
         for bin_val in bin.iter() {
-            let bin_val = if *bin_val < 1 { 1 } else { *bin_val };
+            let bin_val = *bin_val;
 
             // Find the row using binary search
             let row = match self.basebin.binary_search(&bin_val) {
@@ -191,7 +218,7 @@ impl Isin {
             result.push((north, south, west, east));
         }
 
-        result
+        Ok(result)
     }
 }
 
@@ -205,10 +232,10 @@ mod tests {
         fn test_lat2row() {
             let isin = Isin::new(Satellite::Modis);
 
-            assert_eq!(isin.lat2row(0.0), isin.numrows / 2);
-            assert_eq!(isin.lat2row(-90.0), 0);
-            assert_eq!(isin.lat2row(90.0), isin.numrows);
-            assert_eq!(isin.lat2row(45.0), 3240);
+            assert_eq!(isin.lat2row(0.0).unwrap(), isin.numrows / 2);
+            assert_eq!(isin.lat2row(-90.0).unwrap(), 0);
+            assert_eq!(isin.lat2row(90.0).unwrap(), isin.numrows);
+            assert_eq!(isin.lat2row(45.0).unwrap(), 3240);
         }
     }
 
@@ -221,8 +248,8 @@ mod tests {
             let isin = Isin::new(Satellite::Modis);
             let lon = vec![0.0, 45.0, -45.0];
             let lat = vec![0.0, 45.0, -45.0];
-            let bins = isin.lonlat2bin(&lon, &lat);
-            let lonlat = isin.bin2lonlat(&bins);
+            let bins = isin.lonlat2bin(&lon, &lat).unwrap();
+            let lonlat = isin.bin2lonlat(&bins).expect("bin2lonlat test failed");
 
             assert_eq!(lonlat.len(), 3);
 
@@ -234,18 +261,18 @@ mod tests {
     }
 
     mod bin2bounds {
+
         use super::super::*;
         use crate::satellites::Satellite;
 
         #[test]
         fn test_bin2bounds() {
             let isin = Isin::new(Satellite::Modis);
-            let bins = vec![isin.lonlat2bin(&[0.0], &[0.0])[0]];
-            let bounds = isin.bin2bounds(&bins);
+            let bins = vec![isin.lonlat2bin(&[0.0], &[0.0]).unwrap()[0]];
+            let bounds = isin.bin2bounds(&bins).expect("bin2bounds failed in tests");
             assert_eq!(bounds.len(), 1);
 
             let (north, south, west, east) = bounds[0];
-
             assert!(north > south);
             assert!(east > west);
         }
@@ -296,7 +323,7 @@ mod tests {
                 (128.35497835497836, -61.22916666666667),
             ];
 
-            let result = isin.bin2lonlat(&bins);
+            let result = isin.bin2lonlat(&bins).expect("bin2lonlat test failed");
 
             for (res, exp) in result.iter().zip(expected.iter()) {
                 assert_approx_eq_tuple!(res, exp, 1e-6);
@@ -304,26 +331,30 @@ mod tests {
         }
     }
 
-    mod panic_cases {
+    mod should_error {
         use super::super::*;
         use crate::satellites::Satellite;
 
         #[test]
-        #[should_panic]
         fn test_lonlat2bin_panic_when_lon_out_of_bounds() {
             let isin = Isin::new(Satellite::Modis);
             let lon = vec![181.0, 0.0];
             let lat = vec![0.0, 0.0];
-            isin.lonlat2bin(&lon, &lat);
+            assert!(isin.lonlat2bin(&lon, &lat).is_err());
         }
 
         #[test]
-        #[should_panic]
         fn test_lonlat2bin_panic_when_lat_out_of_bounds() {
             let isin = Isin::new(Satellite::Modis);
             let lon = vec![0.0, 0.0];
             let lat = vec![91.0, 0.0];
-            isin.lonlat2bin(&lon, &lat);
+            assert!(isin.lonlat2bin(&lon, &lat).is_err());
+        }
+
+        #[test]
+        fn test_lat_is_out_of_range() {
+            let isin = Isin::new(Satellite::Modis);
+            assert!(isin.lat2row(101.0).is_err());
         }
     }
 }

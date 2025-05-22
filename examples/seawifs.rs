@@ -5,8 +5,8 @@ fn main() {
     let isin = Isin::new(Satellite::Seawifs);
 
     let binnum = 367;
-    let bounds = isin.bin2bounds(&[binnum]);
-    let lonlat = isin.bin2lonlat(&[binnum]);
+    let bounds = isin.bin2bounds(&[binnum]).unwrap();
+    let lonlat = isin.bin2lonlat(&[binnum]).unwrap();
 
     println!("SeaWiFS ISIN grid boundaries for bin {binnum}: {bounds:#?}");
 
