@@ -1,13 +1,13 @@
 [package]
 name = "l3bin"
 version = "1.0.0"
-edition = "2021"
 authors = ["Philippe Massicotte <pmassicotte@hotmail.com>"]
+edition = "2021"
 description = "Integerized Sinusoidal Binning Scheme for Level 3 Data"
-license = "MIT"
-repository = "https://github.com/PMassicotte/l3bin"
-readme = "README.md"
 documentation = "https://docs.rs/l3bin"
+readme = "README.md"
+repository = "https://github.com/PMassicotte/l3bin"
+license = "MIT"
 keywords = ["ISIN", "L3", "binning", "ocean", "satellite"]
 categories = ["science", "science::geo"]
 
@@ -15,11 +15,11 @@ categories = ["science", "science::geo"]
 
 [dependencies]
 
+[features]
+default = []
+
 [profile.dev]
 opt-level = 0
 
 [profile.release]
 opt-level = 3
-
-[features]
-default = []
