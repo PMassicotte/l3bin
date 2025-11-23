@@ -1,8 +1,7 @@
 [package]
 name = "l3bin"
 version = "1.0.0"
-authors = ["Philippe Massicotte <pmassicotte@hotmail.com>"]
-edition = "2021"
+edition = "2024"
 description = "Integerized Sinusoidal Binning Scheme for Level 3 Data"
 documentation = "https://docs.rs/l3bin"
 readme = "README.md"
